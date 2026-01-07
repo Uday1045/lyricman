@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Spotify Now Playing</title>
+
+    <style>
+      body {
+        font-family: "Helvetica Neue", sans-serif;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ===== DRAG BAR ===== */
+      #drag-bar {
+        -webkit-app-region: drag;
+        padding-top: 10px;
+      }
+
+      h1 {
+        margin: 20px 0 10px;
+        font-size: 2em;
+        letter-spacing: 1px;
+        color: #1db954;
+      }
+
+      /* ===== WINDOW CONTROLS ===== */
+      #window-controls {
+        position: fixed;
+        top: 8px;
+        right: 10px;
+        z-index: 999;
+      }
+
+      #closeBtn {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  top: 6px;
+  right: 10px;
+
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 50%;
+  transition: background 0.2s, transform 0.1s;
+}
+      #closeBtn:hover {
+        background: rgb(197, 18, 18);
+      }
+
+      #closeBtn:active {
+        transform: scale(0.9);
+      }
+
+      /* ===== BUTTONS ===== */
+      button {
+        -webkit-app-region: no-drag;
+        margin-top: 20px;
+        padding: 10px 25px;
+        font-size: 16px;
+        background: #1db954;
+        border: none;
+        border-radius: 25px;
+        color: white;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      button:hover {
+        background: #1ed760;
+      }
+
+      /* ===== TRACK INFO ===== */
+      #track-info {
+        display: none;
+        margin-top: 20px;
+      }
+
+      img {
+        border-radius: 10px;
+        margin: 20px auto;
+        display: block;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      #track-name {
+        font-size: 1.5em;
+        margin: 10px 0 5px;
+      }
+
+      #artist-name {
+        font-size: 1.2em;
+        color: #b3b3b3;
+        margin-bottom: 20px;
+      }
+
+      /* ===== LYRICS ===== */
+      #lyrics {
+        -webkit-app-region: no-drag;
+        background: rgba(0, 0, 0, 0.5);
+        margin: 20px auto;
+        padding: 20px;
+        max-width: 600px;
+        border-radius: 10px;
+        line-height: 1.7em;
+        overflow-y: auto;
+        max-height: 400px;
+        white-space: pre-wrap;
+      }
+
+      #lyrics h3 {
+        color: #1db954;
+        margin: 20px 0 5px;
+      }
+
+      #lyrics::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      #lyrics::-webkit-scrollbar-thumb {
+        background: #1db954;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Close Button -->
+   
+
+    <!-- Drag Area -->
+    <div id="drag-bar">
+      <h1>🎧 Spotify Now Playing</h1>
+            <button id="closeBtn">✕</button>
+
+    </div>
+
+    <!-- Login -->
+    <button id="loginBtn">Login with Spotify</button>
+
+    <!-- Track Info -->
+    <div id="track-info">
+      <img id="album-art" width="200" />
+      <h2 id="track-name"></h2>
+      <p id="artist-name"></p>
+    </div>
+
+    <!-- Lyrics -->
+    <div id="lyrics"></div>
+
+    <script>
+  window.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM loaded");
+    console.log("spotify API:", window.spotify);
+
+    /* ===== CLOSE WINDOW ===== */
+    const closeBtn = document.getElementById("closeBtn");
+
+    closeBtn.addEventListener("click", () => {
+      console.log("X clicked");
+
+      if (window.spotify?.closeWindow) {
+        window.spotify.closeWindow();
+      } else {
+        console.error("spotify.closeWindow not available");
+      }
+    });
+
+    /* ===== LOGIN ===== */
+    const loginBtn = document.getElementById("loginBtn");
+
+    loginBtn.addEventListener("click", () => {
+      const clientId = "f7bdca0d4e774f9d89131731d65456de";
+      const redirectUri = "http://127.0.0.1:3000/callback";
+      const scopes =
+        "user-read-currently-playing user-read-playback-state";
+
+      window.location.href =
+        `https://accounts.spotify.com/authorize` +
+        `?response_type=code` +
+        `&client_id=${clientId}` +
+        `&scope=${encodeURIComponent(scopes)}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    });
+
+    /* ===== TRACK + LYRICS ===== */
+    let lastSong = "";
+
+    function cleanArtistName(name) {
+      return name.split(",")[0].split(/feat\.|ft\./i)[0].trim();
+    }
+
+    async function fetchLyrics(artist, song) {
+      const lyricsEl = document.getElementById("lyrics");
+      lyricsEl.innerHTML = "Fetching lyrics... 🎵";
+
+      try {
+        const res = await fetch(
+          `/lyrics?artist=${encodeURIComponent(
+            cleanArtistName(artist)
+          )}&title=${encodeURIComponent(song)}`
+        );
+        const data = await res.json();
+        lyricsEl.innerHTML = data.lyrics || "Lyrics not found 😢";
+      } catch {
+        lyricsEl.innerHTML = "Error fetching lyrics 😢";
+      }
+    }
+
+    async function updateTrack() {
+      try {
+        const res = await fetch("/current-track");
+        if (!res.ok || res.status === 204) return;
+
+        const data = await res.json();
+        if (!data.item) return;
+
+        loginBtn.style.display = "none";
+        document.getElementById("track-info").style.display = "block";
+
+        document.getElementById("album-art").src =
+          data.item.album.images[0]?.url || "";
+        document.getElementById("track-name").textContent =
+          data.item.name;
+        document.getElementById("artist-name").textContent =
+          data.item.artists.map((a) => a.name).join(", ");
+
+        if (data.item.name !== lastSong) {
+          lastSong = data.item.name;
+          fetchLyrics(
+            data.item.artists[0].name,
+            data.item.name
+          );
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    setInterval(updateTrack, 5000);
+    updateTrack();
+  });
+</script>
+  </body>
+</html>
