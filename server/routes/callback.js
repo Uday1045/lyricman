@@ -22,7 +22,7 @@ export function isTokenExpired() {
 
 router.get("/callback", async (req, res) => {
   const code = req.query.code;
-  if (!code) return res.send("No code received.");
+  if (!code) return res.redirect("/");
 
   const params = new URLSearchParams();
   params.append("grant_type", "authorization_code");
