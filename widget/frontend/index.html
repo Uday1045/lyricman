@@ -176,7 +176,7 @@
 
     loginBtn.addEventListener("click", () => {
       const clientId = "f7bdca0d4e774f9d89131731d65456de";
-      const redirectUri = "http://127.0.0.1:3000/callback";
+      const redirectUri = "https://lyricman-1.onrender.com/callback";
       const scopes =
         "user-read-currently-playing user-read-playback-state";
 
@@ -201,7 +201,7 @@
 
       try {
         const res = await fetch(
-          `/lyrics?artist=${encodeURIComponent(
+          `https://lyricman-1.onrender.com/lyrics?artist=${encodeURIComponent(
             cleanArtistName(artist)
           )}&title=${encodeURIComponent(song)}`
         );
@@ -214,7 +214,7 @@
 
     async function updateTrack() {
       try {
-        const res = await fetch("/current-track");
+        const res = await fetch("https://lyricman-1.onrender.com/current-track");
         if (!res.ok || res.status === 204) return;
 
         const data = await res.json();
