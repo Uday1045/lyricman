@@ -15,6 +15,9 @@ const __dirname = path.dirname(__filename);
 
 // ✅ Serve frontend FIRST
 app.use(express.static(path.join(__dirname, "../widget")));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../widget/index.html"));
+});
 
 // ✅ API / OAuth routes
 app.use("/", callbackRouter);
