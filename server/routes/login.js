@@ -2,7 +2,7 @@ import express from "express";
 const router = express.Router();
 
 const client_id = "f7bdca0d4e774f9d89131731d65456de";
-const redirect_uri = "http://127.0.0.1:3000/callback";
+const redirect_uri = "https://lyricman-1.onrender.com/callback";
 const scope = "user-read-currently-playing user-read-playback-state";
 
 router.get("/login", (req, res) => {

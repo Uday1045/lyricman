@@ -6,7 +6,7 @@ const router = express.Router();
 
 const client_id = "f7bdca0d4e774f9d89131731d65456de";
 const client_secret = "72637a121666421b93b5fcc6332f2e5d";
-const redirect_uri = "http://127.0.0.1:3000/callback";
+const redirect_uri = "https://lyricman-1.onrender.com/callback";
 
 let accessToken = "";
 let refreshToken = "";

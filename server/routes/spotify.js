@@ -11,7 +11,7 @@ router.get("/current-track", async (req, res) => {
     // Refresh token if expired
     if (Date.now() > tokenExpiry - 60000 && refreshToken) {
       console.log("⚠️ Token expired, refreshing...");
-      await fetch(`http://127.0.0.1:3000/refresh-token`);
+      await fetch(`https://lyricman-1.onrender.com/refresh-token`);
     }
 
     const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
